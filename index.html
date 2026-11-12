@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLOP Enroll — Get your devnet gateway key</title>
+<meta name="description" content="Connect your Substrate wallet, fund it with free devnet FLOP, sign one message and get your FLOP gateway key. No seed phrase, no sign-up.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a; --bg-soft: #101010; --panel: #141414; --panel-2: #1b1b1b;
+    --line: #262626; --line-soft: #1e1e1e;
+    --text: #f2f2f2; --muted: #a3a3a3; --faint: #6e6e6e;
+    --accent: #f2f2f2; --accent-ink: #0a0a0a;
+    --chip: #1e1e1e; --shadow: 0 12px 40px rgba(0,0,0,.45);
+    --radius: 16px;
+  }
+  [data-theme="light"] {
+    --bg: #fafafa; --bg-soft: #f3f3f3; --panel: #ffffff; --panel-2: #f6f6f6;
+    --line: #e3e3e3; --line-soft: #eeeeee;
+    --text: #111111; --muted: #5f5f5f; --faint: #9a9a9a;
+    --accent: #111111; --accent-ink: #ffffff;
+    --chip: #efefef; --shadow: 0 12px 40px rgba(0,0,0,.08);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif; font-size: 16px; line-height: 1.6;
+    transition: background .25s ease, color .25s ease;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(700px 340px at 15% -5%, rgba(255,255,255,.06), transparent 60%),
+      radial-gradient(600px 300px at 90% 0%, rgba(255,255,255,.04), transparent 60%);
+  }
+  [data-theme="light"] body::before {
+    background:
+      radial-gradient(700px 340px at 15% -5%, rgba(0,0,0,.05), transparent 60%),
+      radial-gradient(600px 300px at 90% 0%, rgba(0,0,0,.03), transparent 60%);
+  }
+  a { color: var(--text); }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+
+  /* ---------- header ---------- */
+  header { border-bottom: 1px solid var(--line); }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0; }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .mark {
+    width: 38px; height: 38px; border-radius: 10px; background: var(--accent); color: var(--accent-ink);
+    display: grid; place-items: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px;
+  }
+  .brand b { font-family: 'Space Grotesk', sans-serif; font-size: 19px; letter-spacing: .04em; }
+  .brand span { display: block; font-size: 12px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+  .bar-right { display: flex; align-items: center; gap: 10px; }
+  .pill {
+    font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; color: var(--muted);
+    display: inline-flex; align-items: center; gap: 7px; background: var(--panel);
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text); display: inline-block; }
+  .dot.live { animation: pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+  .theme-btn {
+    border: 1px solid var(--line); background: var(--panel); color: var(--text);
+    border-radius: 999px; padding: 7px 14px; font: 600 13px 'Inter', sans-serif; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .theme-btn:hover { border-color: var(--muted); }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 64px 0 8px; text-align: center; }
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif; font-size: clamp(38px, 6vw, 60px); line-height: 1.05;
+    margin: 0 0 16px; letter-spacing: -0.02em; font-weight: 700;
+  }
+  .hero h1 em { font-style: normal; color: var(--muted); }
+  .hero p { color: var(--muted); font-size: 18px; max-width: 600px; margin: 0 auto; }
+  .hero-stats { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
+  .stat {
+    border: 1px solid var(--line); background: var(--panel); border-radius: 12px;
+    padding: 10px 16px; font-size: 13px; color: var(--muted);
+  }
+  .stat b { color: var(--text); font-family: 'Space Grotesk', sans-serif; font-size: 15px; display: block; }
+
+  /* ---------- stepper ---------- */
+  .steps-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 44px 0 20px; }
+  .step-nav {
+    border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--panel);
+    font-size: 13px; color: var(--faint);
+  }
+  .step-nav .n {
+    display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+    border: 1px solid var(--line); font-size: 12px; font-weight: 600; margin-right: 8px; color: var(--muted);
+  }
+  .step-nav.active { color: var(--text); border-color: var(--muted); }
+  .step-nav.active .n { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .step-nav.done { color: var(--muted); }
+  .step-nav.done .n { background: var(--chip); color: var(--text); border-color: var(--line); }
+  @media (max-width: 640px) { .steps-nav { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ---------- cards ---------- */
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 26px; margin-bottom: 16px; box-shadow: var(--shadow);
+  }
+  .card h2 { font-family: 'Space Grotesk', sans-serif; font-size: 21px; margin: 0 0 6px; display: flex; align-items: baseline; gap: 10px; }
+  .card h2 .num { color: var(--faint); font-size: 14px; font-weight: 500; }
+  .card p.sub { color: var(--muted); margin: 0 0 18px; font-size: 15px; }
+  .mono { font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+  .addr { word-break: break-all; }
+
+  .btn {
+    border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+    border-radius: 999px; padding: 12px 22px; font: 600 15px 'Inter', sans-serif; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn:hover { opacity: .88; }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .btn.ghost { background: transparent; color: var(--text); border-color: var(--line); }
+  .btn.ghost:hover { border-color: var(--muted); opacity: 1; }
+  .btn.small { padding: 8px 16px; font-size: 13px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .linkish { background: none; border: none; color: var(--muted); font: 500 14px 'Inter', sans-serif; cursor: pointer; text-decoration: underline; padding: 0; }
+  .linkish:hover { color: var(--text); }
+
+  .accounts { display: grid; gap: 8px; margin: 14px 0; }
+  .account {
+    display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; cursor: pointer; background: var(--panel-2);
+  }
+  .account:hover { border-color: var(--muted); }
+  .account.sel { border-color: var(--text); }
+  .account .avatar {
+    width: 34px; height: 34px; border-radius: 50%; flex: none;
+    background: conic-gradient(from 0deg, #888, #ddd, #555, #bbb, #888);
+    display: grid; place-items: center; color: #111; font: 700 13px 'Space Grotesk', sans-serif;
+  }
+  .account .who { min-width: 0; }
+  .account .who b { display: block; font-size: 14px; }
+  .account .who span { color: var(--muted); font-size: 12px; word-break: break-all; }
+  .account input { margin-left: auto; accent-color: var(--text); }
+
+  .msgbox {
+    background: var(--bg-soft); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; line-height: 1.7;
+    white-space: pre-wrap; word-break: break-all; color: var(--muted); max-height: 190px; overflow: auto; margin: 12px 0;
+  }
+  .kv { display: grid; grid-template-columns: 150px 1fr; gap: 6px 14px; font-size: 14px; margin: 12px 0; }
+  .kv dt { color: var(--faint); }
+  .kv dd { margin: 0; word-break: break-all; }
+  .kv dd.mono { font-size: 13px; }
+
+  .status { border-radius: 12px; padding: 12px 14px; font-size: 14px; margin-top: 14px; display: none; }
+  .status.show { display: block; }
+  .status.ok { background: var(--panel-2); border: 1px solid var(--line); }
+  .status.err { background: var(--panel-2); border: 1px solid var(--line); }
+  .status.err b::before { content: "⚠ "; }
+  .status.ok b::before { content: "✓ "; }
+  .status .hint { color: var(--muted); font-size: 13px; display: block; margin-top: 4px; }
+
+  .keybox { display: flex; gap: 8px; margin: 12px 0; }
+  .keybox input {
+    flex: 1; min-width: 0; background: var(--bg-soft); border: 1px solid var(--line); color: var(--text);
+    border-radius: 10px; padding: 12px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+  }
+  .countdown { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--muted); }
+  .countdown b { color: var(--text); }
+  .muted { color: var(--muted); } .small { font-size: 13px; }
+
+  /* ---------- info sections ---------- */
+  .info { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 36px 0; }
+  @media (max-width: 640px) { .info { grid-template-columns: 1fr; } }
+  .info .card { margin: 0; box-shadow: none; }
+  .info h3 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; margin: 0 0 6px; }
+  .info p { color: var(--muted); font-size: 14px; margin: 0; }
+  details {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px; margin-bottom: 10px;
+  }
+  details summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+  details p { color: var(--muted); font-size: 14px; margin: 10px 0 0; }
+  footer { border-top: 1px solid var(--line); margin-top: 48px; padding: 26px 0 40px; color: var(--faint); font-size: 13px; }
+  footer b { color: var(--muted); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#">
+      <span class="mark">F</span>
+      <span><b>FLOP ENROLL</b><span>Devnet gateway keys</span></span>
+    </a>
+    <div class="bar-right">
+      <span class="pill"><span class="dot live"></span>Devnet · Live</span>
+      <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch theme">◐&nbsp;<span id="themeLabel">Light</span></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>Get your FLOP<br><em>gateway key.</em></h1>
+    <p>Connect your wallet, grab free devnet FLOP, sign one message — and you’re ready to run inference on FLOP before testnet opens.</p>
+    <div class="hero-stats">
+      <div class="stat"><b>Free</b>no payment, ever</div>
+      <div class="stat"><b>~2 min</b>start to key</div>
+      <div class="stat"><b>24 hours</b>key lifetime</div>
+      <div class="stat"><b>Private</b>key stays in your browser</div>
+    </div>
+  </section>
+
+  <nav class="steps-nav" id="stepsNav">
+    <div class="step-nav active" data-step="1"><span class="n">1</span>Connect wallet</div>
+    <div class="step-nav" data-step="2"><span class="n">2</span>Get test FLOP</div>
+    <div class="step-nav" data-step="3"><span class="n">3</span>Sign &amp; enrol</div>
+    <div class="step-nav" data-step="4"><span class="n">4</span>Your key</div>
+  </nav>
+
+  <!-- STEP 1 -->
+  <section class="card" id="card1">
+    <h2><span class="num">01</span> Connect your wallet</h2>
+    <p class="sub">Works with Talisman, SubWallet, Nova and Polkadot.js — any Substrate wallet. Your seed phrase never leaves your wallet.</p>
+    <div class="row">
+      <button class="btn" id="btnConnect" type="button">Connect wallet</button>
+      <span class="muted small" id="connectHint">Talisman is the easiest — it’s built for this.</span>
+    </div>
+    <div class="accounts" id="accounts"></div>
+    <div class="status" id="status1"></div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="card hidden" id="card2">
+    <h2><span class="num">02</span> Get free test FLOP</h2>
+    <p class="sub">You need at least 1 FLOP in your wallet to enrol. The faucet gives you 25, free, once every 24 hours.</p>
+    <p class="mono addr" id="fundAddr"></p>
+    <div class="row">
+      <button class="btn" id="btnFaucet" type="button">Get 25 free FLOP</button>
+      <button class="linkish" id="btnSkipFund" type="button">I already have FLOP — skip</button>
+    </div>
+    <div class="status" id="status2"></div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="card hidden" id="card3">
+    <h2><span class="num">03</span> Sign &amp; enrol</h2>
+    <p class="sub">We fetch a fresh sign-in message (it only lasts 5 minutes), your wallet signs it, and FLOP issues your gateway key. Signing moves no funds and costs nothing.</p>
+    <div class="row">
+      <button class="btn" id="btnChallenge" type="button">Fetch sign-in message</button>
+      <span class="countdown hidden" id="challengeTimer">Message expires in <b>05:00</b></span>
+    </div>
+    <div class="msgbox hidden" id="messageBox"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="btnSign" type="button" disabled>Sign in wallet &amp; enrol</button>
+    </div>
+    <div class="status" id="status3"></div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="card hidden" id="card4">
+    <h2><span class="num">04</span> Your gateway key</h2>
+    <p class="sub">Keep this key safe — it’s the only copy FLOP gives you, and it expires in 24 hours. It lives only in this browser unless you save it elsewhere.</p>
+    <div class="keybox">
+      <input type="password" id="keyField" readonly value="" autocomplete="off" spellcheck="false" aria-label="Gateway key">
+      <button class="btn ghost small" id="btnShowKey" type="button">Show</button>
+      <button class="btn ghost small" id="btnCopyKey" type="button">Copy</button>
+      <button class="btn ghost small" id="btnDownloadKey" type="button">Download</button>
+    </div>
+    <dl class="kv">
+      <dt>Model</dt><dd class="mono" id="keyModel">—</dd>
+      <dt>Quota left</dt><dd class="mono" id="keyQuota">—</dd>
+      <dt>Expires</dt><dd id="keyExpiry">—</dd>
+    </dl>
+    <div class="row">
+      <button class="btn ghost small" id="btnQuota" type="button">Check quota</button>
+      <button class="btn ghost small" id="btnForget" type="button">Forget this key</button>
+    </div>
+    <div class="status" id="status4"></div>
+  </section>
+
+  <section class="info">
+    <div class="card">
+      <h3>How it works</h3>
+      <p>1. Connect your wallet.<br>2. Fund it with 25 free FLOP.<br>3. Sign a short message proving you own the wallet.<br>4. FLOP hands you a gateway key for 24 hours of inference.</p>
+    </div>
+    <div class="card">
+      <h3>What’s a gateway key?</h3>
+      <p>It’s a temporary pass that lets your apps call FLOP’s models. Each key carries a spend allowance (up to 20,000 devnet FLOP a day) and dies after 24 hours — then you enrol again.</p>
+    </div>
+    <div class="card">
+      <h3>Why enrol before testnet?</h3>
+      <p>Testnet rewards agents for real inference spend. Practising the flow now — wallet, faucet, key, first call — means you’re ready on day one instead of fighting setup while the clock runs.</p>
+    </div>
+  </section>
+
+  <section>
+    <details>
+      <summary>Is this official?</summary>
+      <p>No — this is a community tool, not affiliated with FLOP. It only talks to FLOP’s own public API (<span class="mono">api.flop.network</span> and <span class="mono">faucet.flop.network</span>). Your seed phrase never leaves your wallet; the page only asks it to sign a message.</p>
+    </details>
+    <details>
+      <summary>What if it says the daily enrolment cap is reached?</summary>
+      <p>FLOP limits how many wallets can enrol each day, and the cap sometimes fills before noon. Nothing is wrong with your wallet — try again after midnight UTC (01:00 WAT). Your faucet FLOP stays put.</p>
+    </details>
+    <details>
+      <summary>My key expired. What now?</summary>
+      <p>Keys last 24 hours by design. Come back, connect the same wallet, and enrol again — it takes about a minute once you’ve done it before.</p>
+    </details>
+    <details>
+      <summary>Where is my key stored?</summary>
+      <p>Only in this browser’s local storage, under your wallet address. Nothing is sent to any server except FLOP’s own API when you check your quota. Use “Forget this key” to wipe it.</p>
+    </details>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <b>FLOP ENROLL</b> — an unofficial community tool for the FLOP devnet. Devnet FLOP is worthless and earns nothing; testnet opens Q4 2026. Built for agents getting ready. Not affiliated with FLOP.
+  </div>
+</footer>
+<script>
+/* Theme toggle lives in its own plain script (no imports), so it works even if the
+   wallet libraries below fail to load. */
+(function () {
+  var btn = document.getElementById('themeBtn');
+  var label = document.getElementById('themeLabel');
+  function applyTheme(t) {
+    document.documentElement.dataset.theme = t;
+    if (label) label.textContent = t === 'dark' ? 'Light' : 'Dark';
+    try { localStorage.setItem('flop-enroll-theme', t); } catch (e) {}
+  }
+  try { applyTheme(localStorage.getItem('flop-enroll-theme') || 'dark'); } catch (e) { applyTheme('dark'); }
+  if (btn) btn.onclick = function () {
+    applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  };
+})();
+</script>
+<script type="module">
+import { web3Enable, web3Accounts, web3FromAddress } from 'https://esm.sh/@polkadot/extension-dapp@0.51.1';
+import { stringToU8a, u8aToHex } from 'https://esm.sh/@polkadot/util@13.5.9';
+
+const API = 'https://api.flop.network';
+const FAUCET = 'https://faucet.flop.network';
+const $ = (id) => document.getElementById(id);
+
+let accounts = [];
+let address = '';
+let challenge = null;
+let challengeEndsAt = 0;
+let challengeTimer = null;
+let keyData = null;
+
+/* ---------- stepper ---------- */
+let maxStep = 1;
+function setStep(n) {
+  maxStep = Math.max(maxStep, n);
+  document.querySelectorAll('.step-nav').forEach(el => {
+    const s = +el.dataset.step;
+    el.classList.toggle('active', s === n);
+    el.classList.toggle('done', s < n);
+  });
+  for (let i = 1; i <= 4; i++) $('card' + i).classList.toggle('hidden', i > maxStep);
+  document.querySelectorAll('.step-nav').forEach(el => {
+    el.style.cursor = +el.dataset.step <= maxStep ? 'pointer' : 'default';
+  });
+}
+document.querySelectorAll('.step-nav').forEach(el => {
+  el.onclick = () => { const s = +el.dataset.step; if (s <= maxStep) setStep(s); };
+});
+
+/* ---------- status helpers ---------- */
+function showStatus(id, kind, title, hint = '') {
+  const el = $(id);
+  el.className = 'status show ' + kind;
+  el.textContent = '';
+  const b = document.createElement('b');
+  b.textContent = title;
+  el.appendChild(b);
+  if (hint) {
+    const s = document.createElement('span');
+    s.className = 'hint';
+    s.textContent = hint;
+    el.appendChild(s);
+  }
+}
+function hideStatus(id) { const el = $(id); el.className = 'status'; el.textContent = ''; }
+function shortAddr(a) { return a.length > 18 ? a.slice(0, 8) + '…' + a.slice(-8) : a; }
+function fmtExpiry(v) {
+  const d = new Date(v);
+  return isNaN(d) ? String(v) : d.toLocaleString();
+}
+function copyText(t, btn, label = 'Copy') {
+  const done = () => { if (btn) { btn.textContent = 'Copied ✓'; setTimeout(() => { btn.textContent = label; }, 1600); } };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t).then(done).catch(() => fallbackCopy(t, done));
+  } else fallbackCopy(t, done);
+}
+function fallbackCopy(t, done) {
+  const ta = document.createElement('textarea');
+  ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch {}
+  document.body.removeChild(ta);
+}
+
+/* ---------- key storage (this browser only) ---------- */
+function keyStorageKey(addr) { return 'flop-enroll-key:' + addr; }
+function saveKey(addr, data) { try { localStorage.setItem(keyStorageKey(addr), JSON.stringify(data)); } catch {} }
+function loadSavedKey(addr) {
+  try {
+    const raw = localStorage.getItem(keyStorageKey(addr));
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    const exp = new Date(d.expires_at).getTime();
+    if (!d.key || !exp || exp <= Date.now()) { localStorage.removeItem(keyStorageKey(addr)); return null; }
+    return d;
+  } catch { return null; }
+}
+
+/* ---------- step 1: connect ---------- */
+function renderAccounts() {
+  const box = $('accounts');
+  box.textContent = '';
+  accounts.forEach(a => {
+    const div = document.createElement('div');
+    div.className = 'account' + (a.address === address ? ' sel' : '');
+    const av = document.createElement('span');
+    av.className = 'avatar';
+    av.textContent = (a.meta.name || '?').slice(0, 2).toUpperCase();
+    const who = document.createElement('span');
+    who.className = 'who';
+    const nm = document.createElement('b');
+    nm.textContent = a.meta.name || 'Account';
+    const ad = document.createElement('span');
+    ad.className = 'mono';
+    ad.textContent = a.address + '  ·  ' + (a.meta.source || '');
+    who.appendChild(nm); who.appendChild(ad);
+    const radio = document.createElement('input');
+    radio.type = 'radio'; radio.name = 'acct'; radio.checked = a.address === address;
+    div.appendChild(av); div.appendChild(who); div.appendChild(radio);
+    div.onclick = () => selectAccount(a.address);
+    box.appendChild(div);
+  });
+}
+function selectAccount(addr) {
+  address = addr;
+  renderAccounts();
+  $('fundAddr').textContent = addr;
+  hideStatus('status2'); hideStatus('status3');
+  challenge = null; challengeEndsAt = 0;
+  if (challengeTimer) { clearInterval(challengeTimer); challengeTimer = null; }
+  $('messageBox').classList.add('hidden'); $('messageBox').textContent = '';
+  $('challengeTimer').classList.add('hidden');
+  $('btnSign').disabled = true;
+  const saved = loadSavedKey(addr);
+  if (saved) {
+    keyData = saved;
+    showKey();
+    showStatus('status4', 'ok', 'You’re already enrolled.', 'Key loaded from this browser — it expires ' + fmtExpiry(saved.expires_at) + '.');
+    setStep(4);
+  } else {
+    keyData = null;
+    setStep(2);
+  }
+}
+
+$('btnConnect').onclick = async () => {
+  hideStatus('status1');
+  const btn = $('btnConnect');
+  btn.disabled = true; btn.textContent = 'Connecting…';
+  try {
+    const exts = await web3Enable('FLOP Enroll');
+    if (!exts.length) {
+      showStatus('status1', 'err', 'No wallet found.',
+        'Install Talisman, SubWallet, Nova or Polkadot.js — and if you opened this file directly, allow the wallet “access to file URLs” in chrome://extensions, then reload.');
+      return;
+    }
+    accounts = await web3Accounts();
+    if (!accounts.length) {
+      showStatus('status1', 'err', 'No accounts found.', 'Unlock your wallet and make sure it has at least one Substrate account.');
+      return;
+    }
+    showStatus('status1', 'ok', 'Wallet connected.', exts.map(e => e.name).join(', ') + ' detected.');
+    const preferred = accounts.find(a => a.address === address) || accounts[0];
+    selectAccount(preferred.address);
+  } catch (e) {
+    showStatus('status1', 'err', 'Couldn’t connect.', String(e && e.message || e));
+  } finally {
+    btn.disabled = false; btn.textContent = 'Connect wallet';
+  }
+};
+
+/* ---------- step 2: faucet ---------- */
+$('btnFaucet').onclick = async () => {
+  hideStatus('status2');
+  const btn = $('btnFaucet');
+  btn.disabled = true; btn.textContent = 'Requesting…';
+  try {
+    const res = await fetch(FAUCET + '/fund', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const retry = res.headers.get('retry-after');
+      const msg = body.message || body.error || ('Faucet refused (HTTP ' + res.status + ').');
+      showStatus('status2', 'err', 'Faucet: ' + msg,
+        retry ? 'Try again in about ' + retry + ' seconds.' : 'If you claimed in the last 24 hours, wait for the cooldown — or skip this step if you already hold FLOP.');
+      return;
+    }
+    showStatus('status2', 'ok', '25 FLOP funded to your wallet.',
+      (body.txHash || body.hash) ? 'Tx: ' + (body.txHash || body.hash) : 'It should land in a few seconds.');
+    setStep(3);
+  } catch (e) {
+    showStatus('status2', 'err', 'Couldn’t reach the faucet.', 'Check your connection and try again.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Get 25 free FLOP';
+  }
+};
+$('btnSkipFund').onclick = () => setStep(3);
+
+/* ---------- step 3: challenge + sign + enrol ---------- */
+function stopChallengeTimer() {
+  if (challengeTimer) { clearInterval(challengeTimer); challengeTimer = null; }
+  $('challengeTimer').classList.add('hidden');
+}
+function startChallengeTimer() {
+  stopChallengeTimer();
+  const el = $('challengeTimer');
+  el.classList.remove('hidden');
+  const tick = () => {
+    const left = Math.max(0, challengeEndsAt - Date.now());
+    const m = String(Math.floor(left / 60000)).padStart(2, '0');
+    const s = String(Math.floor(left % 60000 / 1000)).padStart(2, '0');
+    el.querySelector('b').textContent = m + ':' + s;
+    if (left <= 0) {
+      stopChallengeTimer();
+      $('btnSign').disabled = true;
+      showStatus('status3', 'err', 'Message expired.', 'Challenges last 5 minutes — fetch a fresh one and sign it straight away.');
+    }
+  };
+  tick();
+  challengeTimer = setInterval(tick, 1000);
+}
+
+$('btnChallenge').onclick = async () => {
+  hideStatus('status3');
+  const btn = $('btnChallenge');
+  btn.disabled = true; btn.textContent = 'Fetching…';
+  try {
+    const res = await fetch(API + '/v1/enroll/wallet/challenge?address=' + encodeURIComponent(address));
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.message || ('HTTP ' + res.status));
+    challenge = body;
+    challengeEndsAt = new Date(body.expires_at).getTime() || (Date.now() + 5 * 60 * 1000);
+    const box = $('messageBox');
+    box.textContent = body.message;
+    box.classList.remove('hidden');
+    $('btnSign').disabled = false;
+    startChallengeTimer();
+    showStatus('status3', 'ok', 'Message ready.', 'Sign it in your wallet within 5 minutes. It costs nothing and moves no funds.');
+  } catch (e) {
+    showStatus('status3', 'err', 'Couldn’t fetch a message.', String(e && e.message || e));
+  } finally {
+    btn.disabled = false; btn.textContent = 'Fetch sign-in message';
+  }
+};
+
+$('btnSign').onclick = async () => {
+  hideStatus('status3');
+  if (!challenge) return;
+  const btn = $('btnSign');
+  btn.disabled = true; btn.textContent = 'Waiting for your wallet…';
+  try {
+    const injector = await web3FromAddress(address);
+    const { signature } = await injector.signer.signRaw({
+      address,
+      data: u8aToHex(stringToU8a(challenge.message)),
+      type: 'payload',
+    });
+    btn.textContent = 'Enrolling…';
+    const res = await fetch(API + '/v1/enroll/wallet', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address, message: challenge.message, signature }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (res.status === 401) {
+        showStatus('status3', 'err', 'That signature didn’t verify.',
+          'Fetch a fresh message and sign again — and double-check the right account is selected in your wallet.');
+      } else if (res.status === 503) {
+        showStatus('status3', 'err', 'FLOP’s daily enrolment limit is full.',
+          'Nothing is wrong with your wallet. Try again after midnight UTC (01:00 WAT). Your faucet FLOP stays put.');
+      } else {
+        showStatus('status3', 'err', 'Enrolment failed (' + res.status + ').',
+          body.message || body.error || 'Try a fresh message.');
+      }
+      return;
+    }
+    stopChallengeTimer();
+    keyData = { key: body.key, model: body.model, remaining_quota: body.remaining_quota, expires_at: body.expires_at };
+    saveKey(address, keyData);
+    showKey();
+    showStatus('status4', 'ok', 'You’re enrolled.', 'Your gateway key is ready below.');
+    setStep(4);
+  } catch (e) {
+    showStatus('status3', 'err', 'Signing failed.', String(e && e.message || e) + ' — try fetching a fresh message.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign in wallet & enrol';
+  }
+};
+
+/* ---------- step 4: key ---------- */
+function showKey() {
+  if (!keyData) return;
+  $('keyField').value = keyData.key || '';
+  $('keyModel').textContent = keyData.model || '—';
+  $('keyQuota').textContent = (keyData.remaining_quota ?? '—') + ' FLOP';
+  $('keyExpiry').textContent = fmtExpiry(keyData.expires_at);
+}
+$('btnShowKey').onclick = () => {
+  const f = $('keyField');
+  const show = f.type === 'password';
+  f.type = show ? 'text' : 'password';
+  $('btnShowKey').textContent = show ? 'Hide' : 'Show';
+};
+$('btnCopyKey').onclick = (e) => copyText($('keyField').value, e.currentTarget, 'Copy');
+$('btnDownloadKey').onclick = () => {
+  if (!keyData) return;
+  const text = [
+    'FLOP devnet gateway key',
+    'Wallet: ' + address,
+    'Model: ' + (keyData.model || ''),
+    'Quota: ' + (keyData.remaining_quota ?? '') + ' FLOP',
+    'Expires: ' + fmtExpiry(keyData.expires_at),
+    '',
+    'Key: ' + keyData.key,
+    '',
+    'Keep this private. It expires in 24 hours — enrol again for a new one.',
+  ].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+  a.download = 'flop-gateway-key.txt';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+};
+$('btnForget').onclick = () => {
+  try { localStorage.removeItem(keyStorageKey(address)); } catch {}
+  keyData = null;
+  $('keyField').value = '';
+  $('keyModel').textContent = '—'; $('keyQuota').textContent = '—'; $('keyExpiry').textContent = '—';
+  showStatus('status4', 'ok', 'Key forgotten.', 'It’s wiped from this browser. Enrol again any time for a fresh one.');
+  setStep(3);
+};
+$('btnQuota').onclick = async () => {
+  if (!keyData) return;
+  hideStatus('status4');
+  const btn = $('btnQuota');
+  btn.disabled = true; btn.textContent = 'Checking…';
+  try {
+    const res = await fetch(API + '/v1/keys/me', { headers: { Authorization: 'Bearer ' + keyData.key } });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.message || ('HTTP ' + res.status));
+    keyData.remaining_quota = body.remaining_quota ?? body.remainingQuota ?? keyData.remaining_quota;
+    if (body.expires_at) keyData.expires_at = body.expires_at;
+    saveKey(address, keyData);
+    showKey();
+    showStatus('status4', 'ok', 'Quota: ' + keyData.remaining_quota + ' FLOP left.', 'Expires ' + fmtExpiry(keyData.expires_at) + '.');
+  } catch (e) {
+    showStatus('status4', 'err', 'Couldn’t check quota.', String(e && e.message || e));
+  } finally {
+    btn.disabled = false; btn.textContent = 'Check quota';
+  }
+};
+</script>
+</body>
+</html>
